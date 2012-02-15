@@ -2,3 +2,6 @@
 /project/build/target/
 /project/boot/sbt.boot.lock
 /project/boot/update.log
+
+/target
+/project
