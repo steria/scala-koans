@@ -6,12 +6,12 @@ class AboutRegularExpressions extends KoanSuite {
 
   koan ("regular expressions match substrings") {
     val expression = """wor""".r
-    expression.findFirstIn("hello world").orNull should be ("wor")
+    expression.findFirstIn("hello world").orNull should be (__)
   }
 
   koan ("regular expressions will match nothing if no match") {
     val expression = """wor""".r
-    expression.findFirstIn("hello there").orNull should be (null)
+    expression.findFirstIn("hello there").orNull should be (__)
   }
 
   koan ("regular expressions can be used in matchers") {
@@ -19,15 +19,17 @@ class AboutRegularExpressions extends KoanSuite {
     val expression2 = "hello world".r
     var result:String = null
     
-    "hello world" match {
+    val theString = "hello world"
+    
+    theString match {
       case expression1() => result = "there"
       case expression2() => result = "world"
       case _ =>             result = "no match"
     }
 
-    result should be("world")
-    //mediate
-    // change the matched string to make each of the following pass
+    result should be(__)
+    meditate
+    // change theString to make each of the following pass
     // result should be("there")
     // result should be("no match")
   }
@@ -35,14 +37,14 @@ class AboutRegularExpressions extends KoanSuite {
   koan ("expressions can extract values") {
     val SumExpression = """the sum of (.) and (.)""".r
     val SumExpression(a, b) = "the sum of 1 and 2"
-    a should be("1")
-    b should be("2")
+    a should be(__)
+    b should be(__)
   }
 
   koan ("match zero or more characters") {
     val expression = """h(a*)llo there""".r
     "haaaaaaallo there" match {
-      case expression(s) => s should be("aaaaaaa")
+      case expression(s) => s should be(__)
       case _ => fail()
     }
   }
@@ -50,10 +52,10 @@ class AboutRegularExpressions extends KoanSuite {
   koan ("match zero characters") {
     val expression = """h(a*)llo""".r
     "hllo" match {
-      case expression(s) => s should be("")
+      case expression(s) => s should be(__)
       case _ => fail()
     }
-    // meditate
+    meditate
     // what happens if you change val expression = """h(a+)llo""".r
   }
   
@@ -69,13 +71,13 @@ class AboutRegularExpressions extends KoanSuite {
       case endPartialExpression() => result = "end partial match"
       case fullPartialExpression() => result = "full partial match"
     }
-    result should be("full partial match")
+    result should be(__)
   }
   
   koan ("numeric match") {
     val numericMatch = """the answer is (\d+)""".r
     "the answer is 123" match {
-       case numericMatch(number) => number should be("123")
+       case numericMatch(number) => number should be(__)
        case _ => fail("should match")
     }
   }

@@ -7,147 +7,154 @@ import java.net.{URL, HttpURLConnection, InetAddress, InetSocketAddress, Proxy}
 import java.io.{ InputStream, OutputStream }
 
 class AboutWeb extends ScalatraSuite with KoanSuite {
-	addServlet(classOf[AboutWebServlet], "/*")
-	
-	koan("basic request") {
-		get("/") {
-			body should __
-		}
-	}
-	
-	koan("basic request params") {
-		get("/question") {
-			body should __
-		}
-		
-		get("/question?q=Hello+World!") {
-			body should __
-		}
-	}
-	
-	koan("request with regex matcher") {
-		get("/question_with_matcher?q=My+name+is+Fred.+What+is+my+name?") {
-			body should be ("Fred")
-		}
-	}
-	
-	koan("named request params") {
-		get("/users/test") {
-			body should equal ("username=___")
-			status should __
-		}
-	}
-	
-	koan("session variables") {
-		val name = "scala koans"
-			
-		post("/session_variables", "name" -> name) {
-			body should __
-		}
-		
-		get("/session_variables") {
-			body should __
-		}
-		
-		session {
-		  post("/session_variables", "name" -> name) {
-			body should include (name)
-		  }
-		  
-		  get("/session_variables") {
-			body should include (name)
-		  }
-		}
-	}
-	
-	koan("get response headers") {
-		get("/set_response_headers") {
-			header("__") should equal ("World")
-		}
-	}
 
-	koan("unexisting matchers") {
-		get("/foobar") {
-			status should __
-			body should equal ("page not found")
-		}
-		
-		get("/secret/foobar") {
-			body should equal ("foo-bar")
-		}
-	}
-
-	koan("handle HTTP methods") {
-		put("/http_method") {
-		  body should __
-		}
-		
-		delete("/http_method") {
-			body should __
-		}
-		
-		// send a raw HTTP request using Jettys ServletTester (the 'tester' object)
-		val response = tester.getResponses("PUT /http_method HTTP/1.0\r\n\r\n");
-		response should __
-	}
-}
-
-class AboutWebServlet extends ScalatraServlet {
-	get("/") {
-		"Hello, world!"
-	}
-	
-	get("/users/:username") {
-		"username=" + params("username")
-	}
-	
-	get("/question") {
-		params.getOrElse("q", "ask a question!")
-	}
-	
-	get("/question_with_matcher") {
-		val NameMatcher = """.*m|My name is (.*)\. What is my name.*""".r
-		
-		params("q") match {
-			case NameMatcher(name) => name
-			case _ => "Unknown question."
-		}
-	}
-	
-	post("/session_variables") {
-		session("name") = params("name")
-		session.getOrElse("name", "error!")
+  koan("handle a basic request") {
+    addServlet(new ScalatraServlet {
+      get("/") {
+        "Hello, world!"
+      }
+      get("/some_route") {
+        "Another url"
+      }
+    }, "/*")
+    get("/") {
+      body should equal(__)
     }
-	
-	get("/session_variables") {
-		session.getOrElse("name", "error!")
+    get("/" + __) {
+      body should equal("Another url")
     }
-	
-	get("/set_response_headers") {
-		response.setHeader("Hello", "World")
-	}
-	
-	get("/http_method") {
-		response.getWriter.print(request.getMethod)
-	}
-	
-	put("/http_method") {
-		response.setContentType("text/html; charset=UTF-8")
-		response.getWriter.print(request.getMethod)
-	}
+  }
 
-	delete("/http_method") {
-		response.getWriter.print(request.getMethod)
-	}
-	
-	// hits here if no matcher is found
-	notFound {
-		requestPath match {
-		  case s if s.equals("/secret/foobar") => "foo-bar"
-		  case _ => {
-			status(404)
-			"page not found"
-		  }
-		}
-	}
+  koan("use the tester object") {
+    addServlet(new ScalatraServlet {
+      get("/") {
+        "Hello"
+      }
+    }, "/*")
+    // send a raw HTTP request using Jettys ServletTester (the 'tester' object)
+    val response = tester.getResponses("GET / HTTP/1.0\r\n\r\n");
+    response should startWith("HTTP/" + __ + " OK")
+    response should endWith("" + __)
+  }
+
+  koan("handle request parameters") {
+    addServlet(new ScalatraServlet {
+      get("/question") {
+        params.getOrElse("q", "no param")
+      }
+    }, "/*")
+
+    get("/question") {
+      body should equal(__)
+    }
+
+    get("/question" + __) {
+      body should equal("Hello World!")
+    }
+  }
+
+  koan("parse request parameters") {
+    addServlet(new ScalatraServlet {
+      get("/users/:username") {
+        "username=" + params("username")
+      }
+    }, "/*")
+
+    get("/users/test") {
+      body should equal (__)
+      status should equal(__)
+    }
+  }
+
+  koan("set and get session variables") {
+    addServlet(new ScalatraServlet {
+      post("/session_variables") {
+        session("name") = params("name")
+        session.getOrElse("name", "error!")
+      }
+
+      get("/session_variables") {
+        session.getOrElse("name", "error!")
+      }
+    }, "/*")
+
+    session {
+      get("/session_variables") { body should equal(__) }
+      post("/session_variables", "name" -> "scala koans") {}
+      get("/session_variables") { body should equal(__) }
+    }
+    meditate
+    // what happens if you remove the session {} block?
+  }
+
+  koan("can you set and get cookies?") {
+    addServlet(new ScalatraServlet with CookieSupport {
+        get("/") {
+          if (params.contains("client_name")) {
+            cookies += ("client_name", params("client_name"))
+          }
+          cookies.get("client_name").getOrElse("no cookie for you")
+        }
+    }, "/*")
+    session {
+      get("/") { body should equal(__) }
+      get("/", "client_name" -> "jimbo") {}
+      get("/") { body should equal(__) }
+    }
+  }
+
+  koan("get response headers") {
+    addServlet(new ScalatraServlet {
+      get("/set_response_headers") {
+        response.setHeader("Hello", "World")
+      }
+    }, "/*")
+    get("/set_response_headers") {
+      header("Hello") should equal (__)
+    }
+  }
+
+  koan("not-found matchers") {
+    addServlet(new ScalatraServlet {
+      notFound {
+        requestPath match {
+          case s if s.equals("/secret/foobar") => "foo-bar"
+          case _ => {
+            status(404)
+            "page not found"
+          }
+        }
+      }
+    }, "/*")
+
+    get("/foobar") {
+      status should equal(__)
+      body should equal (__)
+    }
+
+    get("/secret/foobar") {
+      body should equal (__)
+    }
+  }
+
+  koan("handle HTTP methods") {
+    addServlet(new ScalatraServlet {
+      put("/http_method") {
+        response.setContentType("text/html; charset=UTF-8")
+        response.getWriter.print(request.getMethod)
+      }
+
+      delete("/http_method") {
+        response.getWriter.print(request.getMethod)
+      }
+    }, "/*")
+    
+    put("/http_method") {
+      body should equal (__)
+    }
+
+    delete("/http_method") {
+      body should equal (__)
+    }
+  }
 }
