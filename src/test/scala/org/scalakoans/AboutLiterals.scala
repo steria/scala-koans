@@ -25,16 +25,16 @@ class AboutLiterals extends KoanSuite {
 
     s.isInstanceOf[java.lang.String] should __
 
-    // sadly no string interpolation
     val str = "%s - %d".format("abc", 123)
     str should __
   }
 
-  koan("symbol literals") {
-    val s = 'abc
-
-    s.isInstanceOf[___] should be(true)
-
-    __ should be theSameInstanceAs('abc)
+  koan("multiline strings") {
+    meditate
+    val str = """hello
+    \ world
+    """
+    
+    str should equal("hello\n\\ world\n")
   }
 }
