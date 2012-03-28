@@ -28,6 +28,7 @@ class AboutTuples extends KoanSuite {
     val tuple = ("abc", "def")
     tuple._1 should __
 
+    meditate
     // what happens when you uncomment
     // tuple._1 = "ghi"
   }
