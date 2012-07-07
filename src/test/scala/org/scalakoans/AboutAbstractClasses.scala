@@ -18,6 +18,7 @@ class AboutAbstractClasses extends KoanSuite {
     meditate
     // class Thing2 extends Super {
     // }
+    //(new Thing2).sayHello("Lou") should be("Hi, Lou")
   }
 
 }
